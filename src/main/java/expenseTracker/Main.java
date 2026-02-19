@@ -1,4 +1,8 @@
 package main.java.expenseTracker;
+import main.java.expenseTracker.AbstractFactory.IRepositoryFactory;
+import main.java.expenseTracker.AbstractFactory.InMemoryRepositoryFactory;
+import main.java.expenseTracker.factory.RegularUserFactory;
+import main.java.expenseTracker.factory.UserFactory;
 import main.java.expenseTracker.model.Category;
 import main.java.expenseTracker.model.Expense;
 import main.java.expenseTracker.model.RegularUser;
@@ -10,15 +14,33 @@ public class Main {
 
     public static void main(String[] args) {
 
-        User user = new RegularUser("1", "Anatolia");
+// factory method
+        UserFactory userFactory = new RegularUserFactory();
+        User user = (User) userFactory.createUser("1", "Ana");
         user.showPermissions();
 
-        IExpenseRepository repo = new InMemoryExpenseRepository();
-        ExpenseService expenseService = new ExpenseService(repo);
+        // abstract factory
+// familia InMemory
+        IRepositoryFactory repositoryFactory = new InMemoryRepositoryFactory();
+        ExpenseService expenseService = new ExpenseService(repositoryFactory);
 
         Category food = new Category("Food");
         Expense expense = new Expense(50.0, food, "Lunch");
 
-        expenseService.addExpense(expense);
+        expenseService.saveCategory(food);
+        expenseService.saveExpense(expense);
+
+// familia File
+    //    IRepositoryFactory factory = new FileRepositoryFactory();
+
+      //  ExpenseService service = new ExpenseService(factory);
+
+       // Category food = new Category("Food");
+      //  Expense expense = new Expense(100, food, "Lunch");
+
+      //  service.saveCategory(food);
+      //  service.saveExpense(expense);
+
+
     }
 }

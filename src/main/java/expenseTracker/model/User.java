@@ -1,6 +1,6 @@
 package main.java.expenseTracker.model;
 
-public abstract class User {
+public abstract class User implements IUser {
     private String id;
     private String name;
 
@@ -17,5 +17,4 @@ public abstract class User {
         return name;
     }
 
-    public abstract void showPermissions();
 }
