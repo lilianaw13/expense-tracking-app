@@ -1,10 +1,12 @@
 package main.java.expenseTracker.service;
+
 import main.java.expenseTracker.AbstractFactory.IRepositoryFactory;
 import main.java.expenseTracker.model.Category;
 import main.java.expenseTracker.model.Expense;
 import main.java.expenseTracker.repository.ICategoryRepository;
 import main.java.expenseTracker.repository.IExpenseRepository;
 
+import java.util.List;
 
 public class ExpenseService {
 
@@ -19,7 +21,12 @@ public class ExpenseService {
     public void saveExpense(Expense expense) {
         expenseRepository.save(expense);
     }
+
     public void saveCategory(Category category) {
         categoryRepository.save(category);
+    }
+
+    public List<Expense> getAllExpenses() {
+        return expenseRepository.findAll();
     }
 }
