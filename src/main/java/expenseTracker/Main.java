@@ -12,6 +12,12 @@ import main.java.expenseTracker.AbstractFactory.FileRepositoryFactory;
 import main.java.expenseTracker.composite.*;
 import main.java.expenseTracker.facade.*;
 import main.java.expenseTracker.adapter.*;
+import main.java.expenseTracker.flyweight.CategoryFlyweightFactory;
+import main.java.expenseTracker.decorator.*;
+import main.java.expenseTracker.bridge.*;
+import main.java.expenseTracker.proxy.*;
+import main.java.expenseTracker.model.AdminUser;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -114,5 +120,61 @@ public class Main {
         facade.addExpense(adaptedExpense);
 
         facade.printReport();
+
+        // =====================================================
+// FLYWEIGHT
+// =====================================================
+        System.out.println("\n=== FLYWEIGHT ===");
+
+        CategoryFlyweightFactory categoryFactory = new CategoryFlyweightFactory();
+
+        Category cat1 = categoryFactory.getCategory("Food");
+        Category cat2 = categoryFactory.getCategory("Food");
+        Category cat3 = categoryFactory.getCategory("Transport");
+
+        System.out.println("cat1 == cat2: " + (cat1 == cat2));
+        System.out.println("Total unique categories: " + categoryFactory.getCategoryCount());
+
+// =====================================================
+// DECORATOR
+// =====================================================
+        System.out.println("\n=== DECORATOR ===");
+
+        ExpenseProcessor processor = new LoggingDecorator(
+                new ValidationDecorator(
+                        new BasicExpenseProcessor(expenseService)
+                )
+        );
+
+        Expense validExpense = new Expense(150.0, cat1, "Groceries");
+        processor.process(validExpense);
+
+        Expense invalidExpense = new Expense(-20.0, cat1, "Invalid expense");
+        processor.process(invalidExpense);
+
+// =====================================================
+// BRIDGE
+// =====================================================
+        System.out.println("\n=== BRIDGE ===");
+
+        ExpenseReport monthlyConsoleReport = new MonthlyExpenseReport(new ConsoleRenderer());
+        monthlyConsoleReport.generateReport();
+
+        ExpenseReport categoryFileReport = new CategoryExpenseReport(new FileRenderer());
+        categoryFileReport.generateReport();
+
+// =====================================================
+// PROXY
+// =====================================================
+        System.out.println("\n=== PROXY ===");
+
+        User admin = new AdminUser("99", "Maria");
+        IReportService proxyReport = new ReportServiceProxy(admin);
+        proxyReport.generateReport();
+
+        User regular = (User) userFactory.createUser("2", "Ion");
+        IReportService deniedProxyReport = new ReportServiceProxy(regular);
+        deniedProxyReport.generateReport();
+
     }
 }
