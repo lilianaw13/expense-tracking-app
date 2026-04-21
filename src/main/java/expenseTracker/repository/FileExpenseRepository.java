@@ -1,18 +1,33 @@
 package main.java.expenseTracker.repository;
 
 import main.java.expenseTracker.model.Expense;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class FileExpenseRepository implements IExpenseRepository {
 
+    private List<Expense> expenses = new ArrayList<>();
+
     @Override
     public void save(Expense expense) {
-        System.out.println("Expense saved to FILE: " + expense.getAmount());
+        expenses.add(expense);
+        System.out.println("Expense saved in file repository: " + expense.getAmount());
     }
 
     @Override
     public List<Expense> findAll() {
-        return new ArrayList<>();
+        return new ArrayList<>(expenses);
+    }
+
+    @Override
+    public void remove(Expense expense) {
+        expenses.remove(expense);
+        System.out.println("Expense removed from file repository: " + expense.getAmount());
+    }
+
+    @Override
+    public void setAll(List<Expense> expenses) {
+        this.expenses = new ArrayList<>(expenses);
     }
 }

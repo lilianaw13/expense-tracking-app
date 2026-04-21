@@ -16,6 +16,17 @@ public class InMemoryExpenseRepository implements IExpenseRepository {
 
     @Override
     public List<Expense> findAll() {
-        return expenses;
+        return new ArrayList<>(expenses);
+    }
+
+    @Override
+    public void remove(Expense expense) {
+        expenses.remove(expense);
+        System.out.println("Expense removed from memory: " + expense.getAmount());
+    }
+
+    @Override
+    public void setAll(List<Expense> expenses) {
+        this.expenses = new ArrayList<>(expenses);
     }
 }

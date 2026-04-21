@@ -4,14 +4,24 @@ import main.java.expenseTracker.model.Category;
 import main.java.expenseTracker.model.Expense;
 import main.java.expenseTracker.service.ExpenseService;
 import main.java.expenseTracker.singleton.AppContext;
-
+import main.java.expenseTracker.command.AddExpenseCommand;
+import main.java.expenseTracker.command.CommandManager;
+import main.java.expenseTracker.command.IExpenseCommand;
+import main.java.expenseTracker.memento.ExpenseHistory;
+import main.java.expenseTracker.memento.ExpenseMemento;
+import main.java.expenseTracker.observer.ExpenseLogObserver;
+import main.java.expenseTracker.observer.LargeExpenseObserver;
+import main.java.expenseTracker.strategy.BalancedSavingStrategy;
+import main.java.expenseTracker.iterator.ExpenseCollection;
+import main.java.expenseTracker.iterator.IExpenseIterator;
 import javax.swing.*;
 import java.awt.*;
 
 public class ExpenseTrackerUI extends JFrame {
 
     private ExpenseService expenseService;
-
+    private CommandManager commandManager;
+    private ExpenseHistory expenseHistory;
     private JTextField amountField;
     private JTextField categoryField;
     private JTextField descriptionField;
@@ -19,7 +29,12 @@ public class ExpenseTrackerUI extends JFrame {
 
     public ExpenseTrackerUI() {
         expenseService = AppContext.getInstance().getExpenseService();
+        commandManager = new CommandManager();
+        expenseHistory = new ExpenseHistory();
 
+        expenseService.addObserver(new ExpenseLogObserver());
+        expenseService.addObserver(new LargeExpenseObserver());
+        expenseService.setSavingStrategy(new BalancedSavingStrategy());
         setTitle("Expense Tracker App");
         setSize(600, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -74,8 +89,12 @@ public class ExpenseTrackerUI extends JFrame {
             Category category = new Category(categoryName);
             Expense expense = new Expense(amount, category, description);
 
+            expenseHistory.saveState(new ExpenseMemento(expenseService.getAllExpenses()));
+
             expenseService.saveCategory(category);
-            expenseService.saveExpense(expense);
+
+            IExpenseCommand command = new AddExpenseCommand(expenseService, expense);
+            commandManager.executeCommand(command);
 
             outputArea.append("Saved: " + amount + " | " + categoryName + " | " + description + "\n");
 
@@ -91,7 +110,16 @@ public class ExpenseTrackerUI extends JFrame {
     private void viewExpenses() {
         outputArea.append("\n--- All Expenses ---\n");
 
+        ExpenseCollection collection = new ExpenseCollection();
+
         for (Expense expense : expenseService.getAllExpenses()) {
+            collection.addExpense(expense);
+        }
+
+        IExpenseIterator iterator = collection.createIterator();
+
+        while (iterator.hasNext()) {
+            Expense expense = iterator.next();
             outputArea.append(
                     expense.getAmount() + " | " +
                             expense.getCategory().getName() + " | " +
@@ -99,6 +127,19 @@ public class ExpenseTrackerUI extends JFrame {
             );
         }
 
+        outputArea.append("Total expenses: " + expenseService.getTotalExpenses() + "\n");
+        outputArea.append(expenseService.getSavingRecommendation(5000) + "\n");
         outputArea.append("--------------------\n");
+    }
+    private void undoLastAction() {
+        if (expenseHistory.hasHistory()) {
+            ExpenseMemento memento = expenseHistory.undo();
+            if (memento != null) {
+                expenseService.setAllExpenses(memento.getSavedExpenses());
+                outputArea.append("Undo completed. Previous state restored.\n");
+            }
+        } else {
+            outputArea.append("No previous state to restore.\n");
+        }
     }
 }

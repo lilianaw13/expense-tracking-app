@@ -9,6 +9,8 @@ import main.java.expenseTracker.service.ExpenseService;
 import main.java.expenseTracker.builder.*;
 import main.java.expenseTracker.singleton.AppContext;
 import main.java.expenseTracker.AbstractFactory.FileRepositoryFactory;
+import main.java.expenseTracker.AbstractFactory.IRepositoryFactory;
+import main.java.expenseTracker.AbstractFactory.InMemoryRepositoryFactory;
 import main.java.expenseTracker.composite.*;
 import main.java.expenseTracker.facade.*;
 import main.java.expenseTracker.adapter.*;
@@ -18,12 +20,21 @@ import main.java.expenseTracker.bridge.*;
 import main.java.expenseTracker.proxy.*;
 import main.java.expenseTracker.model.AdminUser;
 
+// Behavioral patterns
+import main.java.expenseTracker.strategy.*;
+import main.java.expenseTracker.observer.*;
+import main.java.expenseTracker.command.*;
+import main.java.expenseTracker.memento.*;
+import main.java.expenseTracker.iterator.*;
+
 public class Main {
 
     public static void main(String[] args) {
 
         // =====================================================
         // FACTORY METHOD
+        // Acest pattern creeaza obiecte printr-o fabrica,
+        // fara sa instantiem direct clasa concreta in client.
         // =====================================================
         System.out.println("=== FACTORY METHOD ===");
 
@@ -33,6 +44,8 @@ public class Main {
 
         // =====================================================
         // SINGLETON
+        // Acest pattern asigura existenta unei singure instante
+        // a clasei AppContext in toata aplicatia.
         // =====================================================
         System.out.println("\n=== SINGLETON ===");
 
@@ -43,6 +56,8 @@ public class Main {
 
         // =====================================================
         // ABSTRACT FACTORY - InMemory
+        // Acest pattern permite crearea unei familii de obiecte
+        // compatibile, in cazul nostru repository-uri InMemory.
         // =====================================================
         System.out.println("\n=== ABSTRACT FACTORY - InMemory ===");
 
@@ -60,6 +75,8 @@ public class Main {
 
         // =====================================================
         // ABSTRACT FACTORY - File
+        // Aici schimbam familia de repository-uri cu una bazata
+        // pe fisiere, fara sa schimbam logica din service.
         // =====================================================
         System.out.println("\n=== ABSTRACT FACTORY - File ===");
 
@@ -75,6 +92,8 @@ public class Main {
 
         // =====================================================
         // BUILDER
+        // Acest pattern construieste obiecte pas cu pas,
+        // separand procesul de construire de obiectul final.
         // =====================================================
         System.out.println("\n=== BUILDER ===");
 
@@ -87,6 +106,8 @@ public class Main {
 
         // =====================================================
         // PROTOTYPE
+        // Acest pattern creeaza obiecte noi prin copierea
+        // unui obiect existent.
         // =====================================================
         System.out.println("\n=== PROTOTYPE ===");
 
@@ -99,6 +120,9 @@ public class Main {
 
         // =====================================================
         // FACADE + ADAPTER
+        // Facade simplifica lucrul cu mai multe clase,
+        // iar Adapter transforma o clasa incompatibila
+        // intr-una compatibila cu sistemul nostru.
         // =====================================================
         System.out.println("\n=== FACADE + ADAPTER ===");
 
@@ -122,8 +146,10 @@ public class Main {
         facade.printReport();
 
         // =====================================================
-// FLYWEIGHT
-// =====================================================
+        // FLYWEIGHT
+        // Acest pattern reutilizeaza obiecte comune pentru a
+        // economisi memorie.
+        // =====================================================
         System.out.println("\n=== FLYWEIGHT ===");
 
         CategoryFlyweightFactory categoryFactory = new CategoryFlyweightFactory();
@@ -135,9 +161,11 @@ public class Main {
         System.out.println("cat1 == cat2: " + (cat1 == cat2));
         System.out.println("Total unique categories: " + categoryFactory.getCategoryCount());
 
-// =====================================================
-// DECORATOR
-// =====================================================
+        // =====================================================
+        // DECORATOR
+        // Acest pattern adauga functionalitati suplimentare
+        // unui obiect fara sa modificam clasa lui de baza.
+        // =====================================================
         System.out.println("\n=== DECORATOR ===");
 
         ExpenseProcessor processor = new LoggingDecorator(
@@ -152,9 +180,11 @@ public class Main {
         Expense invalidExpense = new Expense(-20.0, cat1, "Invalid expense");
         processor.process(invalidExpense);
 
-// =====================================================
-// BRIDGE
-// =====================================================
+        // =====================================================
+        // BRIDGE
+        // Acest pattern separa abstractia de implementare,
+        // astfel incat ambele sa poata varia independent.
+        // =====================================================
         System.out.println("\n=== BRIDGE ===");
 
         ExpenseReport monthlyConsoleReport = new MonthlyExpenseReport(new ConsoleRenderer());
@@ -163,9 +193,12 @@ public class Main {
         ExpenseReport categoryFileReport = new CategoryExpenseReport(new FileRenderer());
         categoryFileReport.generateReport();
 
-// =====================================================
-// PROXY
-// =====================================================
+        // =====================================================
+        // PROXY
+        // Acest pattern controleaza accesul la un obiect.
+        // In cazul nostru, verificam drepturile utilizatorului
+        // inainte de generarea raportului.
+        // =====================================================
         System.out.println("\n=== PROXY ===");
 
         User admin = new AdminUser("99", "Maria");
@@ -176,5 +209,137 @@ public class Main {
         IReportService deniedProxyReport = new ReportServiceProxy(regular);
         deniedProxyReport.generateReport();
 
+        // =====================================================
+        // BEHAVIORAL DESIGN PATTERNS
+        // Pentru aceste exemple folosim din nou repository-uri
+        // InMemory, ca demonstratia sa fie simpla si clara.
+        // =====================================================
+        IRepositoryFactory demoFactory = new InMemoryRepositoryFactory();
+        ExpenseService behavioralExpenseService = new ExpenseService(demoFactory);
+
+        Category strategyCategory = new Category("StrategyCategory");
+        Category observerCategory = new Category("ObserverCategory");
+        Category commandCategory = new Category("CommandCategory");
+
+        behavioralExpenseService.saveCategory(strategyCategory);
+        behavioralExpenseService.saveCategory(observerCategory);
+        behavioralExpenseService.saveCategory(commandCategory);
+
+        // =====================================================
+        // STRATEGY
+        // Acest pattern permite schimbarea algoritmului in mod
+        // dinamic. Aici schimbam strategia de economisire
+        // fara sa modificam codul din ExpenseService.
+        // =====================================================
+        System.out.println("\n=== STRATEGY ===");
+
+        behavioralExpenseService.setSavingStrategy(new ConservativeSavingStrategy());
+        System.out.println(behavioralExpenseService.getSavingRecommendation(5000));
+
+        behavioralExpenseService.setSavingStrategy(new BalancedSavingStrategy());
+        System.out.println(behavioralExpenseService.getSavingRecommendation(5000));
+
+        behavioralExpenseService.setSavingStrategy(new AggressiveSavingStrategy());
+        System.out.println(behavioralExpenseService.getSavingRecommendation(5000));
+
+        // =====================================================
+        // OBSERVER
+        // Acest pattern notifica automat mai multi observatori
+        // atunci cand apare o schimbare. Aici, cand se adauga
+        // o cheltuiala, observatorii reactioneaza automat.
+        // =====================================================
+        System.out.println("\n=== OBSERVER ===");
+
+        IExpenseObserver logObserver = new ExpenseLogObserver();
+        IExpenseObserver largeExpenseObserver = new LargeExpenseObserver();
+
+        behavioralExpenseService.addObserver(logObserver);
+        behavioralExpenseService.addObserver(largeExpenseObserver);
+
+        Expense observedExpense1 = new Expense(150, observerCategory, "Books");
+        Expense observedExpense2 = new Expense(2000, observerCategory, "Laptop");
+
+        behavioralExpenseService.saveExpense(observedExpense1);
+        behavioralExpenseService.saveExpense(observedExpense2);
+
+        // =====================================================
+        // COMMAND
+        // Acest pattern transforma o actiune intr-un obiect.
+        // Aici adaugarea unei cheltuieli este o comanda care
+        // poate fi executata si apoi anulata prin undo.
+        // =====================================================
+        System.out.println("\n=== COMMAND ===");
+
+        CommandManager commandManager = new CommandManager();
+
+        Expense commandExpense = new Expense(300, commandCategory, "Shoes");
+        IExpenseCommand addExpenseCommand =
+                new AddExpenseCommand(behavioralExpenseService, commandExpense);
+
+        System.out.println("Before command execute: " + behavioralExpenseService.getAllExpenses().size());
+        commandManager.executeCommand(addExpenseCommand);
+        System.out.println("After command execute: " + behavioralExpenseService.getAllExpenses().size());
+
+        commandManager.undoLastCommand();
+        System.out.println("After undo command: " + behavioralExpenseService.getAllExpenses().size());
+
+        // =====================================================
+        // MEMENTO
+        // Acest pattern salveaza starea unui obiect pentru a
+        // putea reveni la ea mai tarziu. Aici salvam lista de
+        // cheltuieli si restauram starea anterioara.
+        // =====================================================
+        System.out.println("\n=== MEMENTO ===");
+
+        ExpenseHistory history = new ExpenseHistory();
+
+        history.saveState(new ExpenseMemento(behavioralExpenseService.getAllExpenses()));
+        System.out.println("State saved.");
+
+        Expense wrongExpense = new Expense(9999, commandCategory, "Wrong expense");
+        behavioralExpenseService.saveExpense(wrongExpense);
+
+        System.out.println("Expenses after wrong change: " + behavioralExpenseService.getAllExpenses().size());
+
+        ExpenseMemento previousState = history.undo();
+        if (previousState != null) {
+            behavioralExpenseService.setAllExpenses(previousState.getSavedExpenses());
+            System.out.println("Previous state restored.");
+        }
+
+        System.out.println("Expenses after restore: " + behavioralExpenseService.getAllExpenses().size());
+
+        // =====================================================
+        // ITERATOR
+        // Acest pattern permite parcurgerea unei colectii fara
+        // a expune structura interna a acesteia. Aici parcurgem
+        // cheltuielile printr-un iterator custom.
+        // =====================================================
+        System.out.println("\n=== ITERATOR ===");
+
+        Expense iteratorExpense1 = new Expense(100, strategyCategory, "Notebook");
+        Expense iteratorExpense2 = new Expense(250, strategyCategory, "Headphones");
+        Expense iteratorExpense3 = new Expense(400, strategyCategory, "Keyboard");
+
+        behavioralExpenseService.saveExpense(iteratorExpense1);
+        behavioralExpenseService.saveExpense(iteratorExpense2);
+        behavioralExpenseService.saveExpense(iteratorExpense3);
+
+        ExpenseCollection collection = new ExpenseCollection();
+
+        for (Expense currentExpense : behavioralExpenseService.getAllExpenses()) {
+            collection.addExpense(currentExpense);
+        }
+
+        IExpenseIterator iterator = collection.createIterator();
+
+        while (iterator.hasNext()) {
+            Expense currentExpense = iterator.next();
+            System.out.println(
+                    currentExpense.getAmount() + " | " +
+                            currentExpense.getCategory().getName() + " | " +
+                            currentExpense.getDescription()
+            );
+        }
     }
 }
