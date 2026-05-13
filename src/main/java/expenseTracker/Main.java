@@ -19,15 +19,11 @@ import main.java.expenseTracker.decorator.*;
 import main.java.expenseTracker.bridge.*;
 import main.java.expenseTracker.proxy.*;
 import main.java.expenseTracker.model.AdminUser;
-
-// Behavioral patterns (LAB 5)
 import main.java.expenseTracker.strategy.*;
 import main.java.expenseTracker.observer.*;
 import main.java.expenseTracker.command.*;
 import main.java.expenseTracker.memento.*;
 import main.java.expenseTracker.iterator.*;
-
-// Behavioral patterns (LAB 7)
 import main.java.expenseTracker.ChainOfResponsibility.*;
 import main.java.expenseTracker.State.*;
 import main.java.expenseTracker.mediator.*;
