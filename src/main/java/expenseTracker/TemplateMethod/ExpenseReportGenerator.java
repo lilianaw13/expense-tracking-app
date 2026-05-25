@@ -10,13 +10,17 @@ public abstract class ExpenseReportGenerator {
     // Template Method — scheletul fix, apeleaza pasii in ordine
     public final void generateReport(List<Expense> expenses) {
         System.out.println("\n--- " + getReportTitle() + " ---");
-        List<Expense> filtered  = filterExpenses(expenses);   // pas 1 — poate fi suprascris
-        List<Expense> sorted    = sortExpenses(filtered);      // pas 2 — poate fi suprascris
-        String        formatted = formatData(sorted);          // pas 3 — ABSTRACT, obligatoriu
+        String formatted = buildReport(expenses);
         onBeforeExport();                                       // hook optional
         exportReport(formatted);                               // pas 4 — ABSTRACT, obligatoriu
         onAfterExport();                                        // hook optional
         System.out.println("--- Report done. ---");
+    }
+
+    public final String buildReport(List<Expense> expenses) {
+        List<Expense> filtered  = filterExpenses(expenses);   // pas 1 — poate fi suprascris
+        List<Expense> sorted    = sortExpenses(filtered);      // pas 2 — poate fi suprascris
+        return formatData(sorted);                             // pas 3 — ABSTRACT, obligatoriu
     }
 
     // Pasi abstracti — subclasele TREBUIE sa ii implementeze

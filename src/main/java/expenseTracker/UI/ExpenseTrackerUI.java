@@ -3,9 +3,11 @@ package main.java.expenseTracker.UI;
 import javafx.application.Application;
 import javafx.concurrent.Worker;
 import javafx.scene.Scene;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import netscape.javascript.JSObject;
 
@@ -45,10 +47,19 @@ public class ExpenseTrackerUI extends Application {
         });
         engine.load(new java.io.File("sprout_app.html").toURI().toString());
 
+        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+        double appWidth = Math.min(430, screenBounds.getWidth() - 40);
+        double appHeight = Math.min(720, screenBounds.getHeight() - 80);
+
+        webView.setPrefSize(appWidth, appHeight);
+        webView.setMinSize(appWidth, appHeight);
+
         StackPane root = new StackPane(webView);
-        Scene scene = new Scene(root, 420, 800);
+        Scene scene = new Scene(root, appWidth, appHeight);
         stage.setTitle("Sprout");
         stage.setScene(scene);
+        stage.setResizable(true);
+        stage.centerOnScreen();
         stage.show();
     }
 

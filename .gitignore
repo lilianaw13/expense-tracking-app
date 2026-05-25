@@ -37,8 +37,14 @@ bin/
 ### Logs ###
 *.log
 
+### Local database ###
+*.db
+*.sqlite
+*.sqlite3
+
 ### Package files ###
 *.jar
+!lib/sqlite-jdbc-*.jar
 *.war
 *.nar
 *.ear

@@ -1,5 +1,7 @@
 package main.java.expenseTracker.UI;
 
+import main.java.expenseTracker.AbstractFactory.DatabaseRepositoryFactory;
+import main.java.expenseTracker.AbstractFactory.InMemoryRepositoryFactory;
 import main.java.expenseTracker.singleton.AppContext;
 import main.java.expenseTracker.model.Category;
 import main.java.expenseTracker.model.Expense;
@@ -13,7 +15,16 @@ import main.java.expenseTracker.strategy.*;
 import main.java.expenseTracker.memento.*;
 import main.java.expenseTracker.flyweight.CategoryFlyweightFactory;
 import main.java.expenseTracker.State.BudgetAccount;
+import main.java.expenseTracker.TemplateMethod.CsvExpenseReportGenerator;
+import main.java.expenseTracker.TemplateMethod.ExpenseReportGenerator;
+import main.java.expenseTracker.TemplateMethod.HtmlExpenseReportGenerator;
+import main.java.expenseTracker.TemplateMethod.SummaryExpenseReportGenerator;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class JavaBridge {
@@ -28,6 +39,13 @@ public class JavaBridge {
 
     public JavaBridge() {
         AppContext context = AppContext.getInstance();
+        try {
+            context.setRepositoryFactory(new DatabaseRepositoryFactory());
+        } catch (RuntimeException e) {
+            System.out.println("Database unavailable. The app will use in-memory storage.");
+            System.out.println(e.getMessage());
+            context.setRepositoryFactory(new InMemoryRepositoryFactory());
+        }
         this.expenseService = context.getExpenseService();
         this.commandManager = new CommandManager();
         this.expenseHistory = new ExpenseHistory();
@@ -123,6 +141,68 @@ public class JavaBridge {
     // PROXY
     public String getTotal() {
         return String.valueOf(expenseService.getTotalExpenses());
+    }
+
+    public String generateAnnualReport(String type) {
+        try {
+            ReportSelection selection = selectReportGenerator(type);
+            String content = selection.generator.buildReport(expenseService.getAllExpenses());
+
+            if ("html".equals(selection.type)) {
+                content = wrapHtmlReport(content);
+            }
+
+            Path reportsDir = Path.of("reports");
+            Files.createDirectories(reportsDir);
+
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            Path reportPath = reportsDir.resolve("annual_report_" + timestamp + "." + selection.extension);
+            Files.writeString(reportPath, content, StandardCharsets.UTF_8);
+
+            return "{\"success\":true,\"path\":\"" + escapeJson(reportPath.toAbsolutePath().toString()) + "\"}";
+        } catch (Exception e) {
+            return "{\"success\":false,\"message\":\"" + escapeJson(e.getMessage()) + "\"}";
+        }
+    }
+
+    private ReportSelection selectReportGenerator(String type) {
+        String normalizedType = type == null ? "summary" : type.toLowerCase();
+
+        switch (normalizedType) {
+            case "csv":
+                return new ReportSelection("csv", "csv", new CsvExpenseReportGenerator());
+            case "html":
+                return new ReportSelection("html", "html", new HtmlExpenseReportGenerator());
+            default:
+                return new ReportSelection("summary", "txt", new SummaryExpenseReportGenerator());
+        }
+    }
+
+    private String wrapHtmlReport(String content) {
+        return "<!DOCTYPE html>\n" +
+                "<html><head><meta charset=\"UTF-8\"><title>Annual Expense Report</title>" +
+                "<style>body{font-family:Arial,sans-serif;padding:24px;}table{border-collapse:collapse;width:100%;}" +
+                "th,td{padding:8px;border:1px solid #ddd;text-align:left;}th{background:#f7d6e1;}</style>" +
+                "</head><body><h1>Annual Expense Report</h1>" + content + "</body></html>";
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static class ReportSelection {
+        private final String type;
+        private final String extension;
+        private final ExpenseReportGenerator generator;
+
+        private ReportSelection(String type, String extension, ExpenseReportGenerator generator) {
+            this.type = type;
+            this.extension = extension;
+            this.generator = generator;
+        }
     }
 
 }
