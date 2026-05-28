@@ -37,6 +37,17 @@ public class ExpenseTrackerUI extends Application {
             alert.setContentText(event.getData());
             alert.showAndWait();
         });
+        // Activeaza confirm() din JavaScript
+        engine.setConfirmHandler(message -> {
+            javafx.scene.control.Alert alert =
+                    new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Sprout");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            return alert.showAndWait()
+                    .filter(button -> button == javafx.scene.control.ButtonType.OK)
+                    .isPresent();
+        });
         // Activează prompt() din JavaScript
         engine.setPromptHandler(event -> {
             javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();

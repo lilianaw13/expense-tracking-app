@@ -15,10 +15,10 @@ public class ReportServiceProxy implements IReportService {
     @Override
     public void generateReport() {
         if (user instanceof AdminUser) {
-            System.out.println("Access granted for admin: " + user.getName());
+            System.out.println("Admin access granted for: " + user.getName());
             realReportService.generateReport();
         } else {
-            System.out.println("Access denied. Only admin can generate reports.");
+            System.out.println("Access denied. Admin profile is required.");
         }
     }
 }
