@@ -60,6 +60,7 @@ public class JavaBridge {
     private ExpenseService expenseService;
     private CommandManager commandManager;
     private ExpenseHistory expenseHistory;
+    private ExpenseHistory adminExpenseHistory;
     private CategoryFlyweightFactory categoryFactory;
     private BudgetAccount budgetAccount;
     private IExpenseHandler validationChain;
@@ -80,6 +81,7 @@ public class JavaBridge {
         this.expenseService = context.getExpenseService();
         this.commandManager = new CommandManager();
         this.expenseHistory = new ExpenseHistory();
+        this.adminExpenseHistory = new ExpenseHistory();
         this.categoryFactory = new CategoryFlyweightFactory();
         this.budgetAccount = new BudgetAccount(5000.0);
 
@@ -133,6 +135,7 @@ public class JavaBridge {
             }
 
             if (currentUser instanceof AdminUser) {
+                adminExpenseHistory.saveState(new ExpenseMemento(adminExpenses));
                 adminExpenses.add(expense);
                 budgetAccount.addExpense(amount);
                 return "{\"success\":true,\"total\":" + getVisibleTotal() + "}";
@@ -178,6 +181,15 @@ public class JavaBridge {
 
     // COMMAND + MEMENTO
     public String undoLast() {
+        if (currentUser instanceof AdminUser) {
+            ExpenseMemento previous = adminExpenseHistory.undo();
+            if (previous != null) {
+                adminExpenses = previous.getSavedExpenses();
+                return "{\"success\":true,\"total\":" + getVisibleTotal() + "}";
+            }
+            return "{\"success\":false,\"message\":\"Nimic de anulat pentru admin\"}";
+        }
+
         ExpenseMemento previous = expenseHistory.undo();
         if (previous != null) {
             expenseService.setAllExpenses(previous.getSavedExpenses());
@@ -214,6 +226,7 @@ public class JavaBridge {
     public String startNewMonth() {
         double previousTotal = getVisibleTotal();
         if (currentUser instanceof AdminUser) {
+            adminExpenseHistory.saveState(new ExpenseMemento(adminExpenses));
             adminExpenses = new ArrayList<>();
         } else {
             expenseHistory.saveState(new ExpenseMemento(expenseService.getAllExpenses()));
@@ -317,6 +330,7 @@ public class JavaBridge {
         Expense copy = lastExpense.deepCopy();
         copy.setDescription(copy.getDescription() + " (copie)");
         if (currentUser instanceof AdminUser) {
+            adminExpenseHistory.saveState(new ExpenseMemento(adminExpenses));
             adminExpenses.add(copy);
             return "{\"success\":true,\"total\":" + getVisibleTotal() + "}";
         }
@@ -330,9 +344,11 @@ public class JavaBridge {
         }
 
         if (currentUser instanceof AdminUser) {
+            adminExpenseHistory.saveState(new ExpenseMemento(adminExpenses));
             adminExpenses.remove(index);
             return "{\"success\":true,\"total\":" + getVisibleTotal() + "}";
         }
+        expenseHistory.saveState(new ExpenseMemento(expenseService.getAllExpenses()));
         expenseService.removeExpense(expenses.get(index));
         return "{\"success\":true,\"total\":" + expenseService.getTotalExpenses() + "}";
     }
@@ -490,10 +506,10 @@ public class JavaBridge {
         Category audit = categoryFactory.getCategory("Audit admin");
         Category operations = categoryFactory.getCategory("Operatiuni");
         Category reports = categoryFactory.getCategory("Rapoarte");
-        expenses.add(new Expense(1290, audit, "Audit conturi utilizatori"));
-        expenses.add(new Expense(840, operations, "Mentenanta baza de date"));
-        expenses.add(new Expense(460, reports, "Export rapoarte lunare"));
-        expenses.add(new Expense(2150, audit, "Verificare tranzactii mari"));
+        expenses.add(new Expense(1290, audit, "Exemplu cheltuiala admin: audit conturi utilizatori"));
+        expenses.add(new Expense(840, operations, "Exemplu cheltuiala admin: mentenanta baza de date"));
+        expenses.add(new Expense(460, reports, "Exemplu cheltuiala admin: export rapoarte lunare"));
+        expenses.add(new Expense(2150, audit, "Exemplu cheltuiala admin: verificare tranzactii mari"));
         return expenses;
     }
 
